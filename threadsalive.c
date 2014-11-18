@@ -144,32 +144,30 @@ void ta_sem_destroy(tasem_t *sem) {
 }
 
 void ta_sem_post(tasem_t *sem) {
-	sem->count++;  //increment counter in semaphore
 	if ((sem->count > 0) && (sem->waiting_queue != NULL)) {  //if there is a thread waiting to be awoken
 		numblocked--;  //decrement number of threads in waiting_queue
 		struct node *put_in_ready = sem->waiting_queue;  //thread to be put in ready is at head
-		//put_in_ready->next = NULL;
-		sem->waiting_queue = sem->waiting_queue->next;  //new head
+		sem->waiting_queue = sem->waiting_queue->next;  //new head in waiting queue
+		put_in_ready->next = NULL;  //isolate put_in_ready
 		struct node *temp = ready_queue;
 		while (temp->next != NULL) {
-			temp = temp->next;
+			temp = temp->next;  //get to the end of ready queue
 		}
 		temp->next = put_in_ready;  //new thread is put at end of ready queue
-		put_in_ready->next = NULL;  //new null terminator in ready queue
+		swapcontext(&waiting_queue->thread, &put_in_ready->thread);
 	}
+	sem->count++;  //increment counter in semaphore
 }
 
-void ta_sem_wait(tasem_t *sem) {
-	if (sem==NULL) {
-		return;
-	}	
-	else if (sem->count == 0) {
+void ta_sem_wait(tasem_t *sem) {	
+	if (sem->count == 0) {
 		numblocked++;
 		struct node *thread_to_wait = ready_queue;  //the thread that will wait is at the head of ready
 		ready_queue = ready_queue->next;  //move head of ready queue
-		//thread_to_wait->next = NULL;
+		thread_to_wait->next = NULL;		
+		
 		struct node *temp = sem->waiting_queue;
-		if (temp == NULL) {   //if waiting_queue is empty, put thread_to_wait 1st in line
+		if (sem->waiting_queue == NULL) {   //if waiting_queue is empty, put thread_to_wait 1st in line
 			sem->waiting_queue = thread_to_wait;
 		}		
 		else {   //else, put thread_to_wait at the end of waiting_queue
