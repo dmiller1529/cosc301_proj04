@@ -9,15 +9,21 @@
         type definitions
    *************************** */
 
-typedef struct {
+typedef struct node {  	//initialized node struct, which contains thread value and pointer to next thread
+	ucontext_t thread;
+	struct node *next;
+} node;
 
+typedef struct tasem_t {
+	int count;
+	struct node *waiting_queue;  //head of waiting_queue
 } tasem_t;
 
-typedef struct {
-
+typedef struct talock_t {
+	tasem_t sem;	//binary sem should act as a lock
 } talock_t;
 
-typedef struct {
+typedef struct tacond_t {
 
 } tacond_t;
 
